@@ -1,10 +1,21 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
+import { GraphQLModule } from '@nestjs/graphql';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AppResolver } from './app.resolver';
 import { AppService } from './app.service';
+import { UserModule } from './user/user.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    MongooseModule.forRoot(
+      'mongodb+srv://furbox:FBtUrQBODSYxlooB@starternode.elcw7.mongodb.net/auth-nest',
+    ),
+    GraphQLModule.forRoot({
+      autoSchemaFile: true,
+      debug: false,
+    }),
+    UserModule,
+  ],
+  providers: [AppService, AppResolver],
 })
 export class AppModule {}
