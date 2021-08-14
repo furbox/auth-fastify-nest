@@ -8,7 +8,7 @@ import { UserModule } from './user/user.module';
 @Module({
   imports: [
     MongooseModule.forRoot(
-      'mongodb+srv://furbox:FBtUrQBODSYxlooB@starternode.elcw7.mongodb.net/auth-nest',
+      'urlmongo',
     ),
     GraphQLModule.forRoot({
       autoSchemaFile: true,
