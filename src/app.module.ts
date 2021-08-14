@@ -7,9 +7,7 @@ import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(
-      'urlmongo',
-    ),
+    MongooseModule.forRoot('mongodb://localhost:27017/auth-nest'),
     GraphQLModule.forRoot({
       autoSchemaFile: true,
       debug: false,
