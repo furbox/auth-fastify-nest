@@ -13,6 +13,36 @@ export class UserService {
     private jwtService: JwtService,
     @InjectModel(User.name) private UserModel: Model<UserDocument>,
   ) {}
+
+  async createUser(createUserInput: CreateUserInput) {
+    try {
+      const isUser = await this.UserModel.findOne({
+        email: createUserInput.email,
+      });
+      if (isUser) {
+        throw new GraphQLError('El usuario ya exite!!');
+      } else {
+        createUserInput.password = await bcrypt
+          .hash(createUserInput.password, 10)
+          .then((r) => r);
+        return await new this.UserModel(createUserInput).save();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async login({ password, email }) {
+    try {
+      const user = await this.UserModel.findOne({ email });
+      return user && (await bcrypt.compare(password, user.password))
+        ? await this.jwtService.signAsync({ email, _id: user._id })
+        : new GraphQLError('Datos Incorrectos!!');
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   async findAll() {
     try {
       return await this.UserModel.find().exec();
@@ -20,31 +50,42 @@ export class UserService {
       console.log(error);
     }
   }
-  async login({ email, password }) {
+
+  async updateUser(_id, updateUserInput: UpdateUserInput) {
     try {
-      const user = await this.UserModel.findOne({ email });
-      return user && (await bcrypt.compare(password, user.password))
-        ? await this.jwtService.signAsync({ email, _id: user._id })
-        : new GraphQLError('Datos incorrectos!!');
-    } catch (error) {
-      console.log(error);
+      return await this.UserModel.findByIdAndUpdate(_id, updateUserInput, {
+        new: true,
+      }).exec();
+    } catch (err) {
+      console.error(err);
     }
   }
-  async createUser(createUserInput: CreateUserInput) {
+
+  async updatePassword(_id, currPass, newPass) {
     try {
-      const isUser = await this.UserModel.findOne({
-        email: createUserInput.email,
-      });
-      if (isUser) {
-        throw new GraphQLError('El usuario ya se encuentra registrado.');
-      } else {
-        createUserInput.password = await bcrypt
-          .hash(createUserInput.password, 10)
-          .then((r) => r);
-        return await new this.UserModel(createUserInput).save();
+      const User = await this.UserModel.findById(_id);
+      if (await bcrypt.compare(currPass, User.password)) {
+        User.password = await bcrypt.hash(newPass, 10);
+        return await new this.UserModel(User).save();
       }
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async findOne(_id: Types.ObjectId) {
+    try {
+      return await this.UserModel.findById(_id);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async remove(_id: string) {
+    try {
+      return await this.UserModel.findByIdAndRemove(_id);
+    } catch (err) {
+      console.error(err);
     }
   }
 }
